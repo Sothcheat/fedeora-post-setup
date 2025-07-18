@@ -14,7 +14,7 @@
 - [9. Additional Productivity & Usability Steps](#9-additional-productivity--usability-steps)
 - [10. Dual Boot Maintenance](#10-dual-boot-maintenance)
 - [11. Ongoing Best Practices](#11-ongoing-best-practices)
-
+---
 ## 1. Preparation
 
 - **Backup your data:** Safeguard important files from the Zenbook and Windows partition.
