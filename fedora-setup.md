@@ -246,7 +246,7 @@
   - Node.js: `sudo dnf install nodejs`
 - **IDEs and editors:**
   - GNOME Software/Flathub: VS Code, PyCharm, IntelliJ IDEA.
-  - VS Code: 
+  - **[VS Code](https://code.visualstudio.com/):** 
   ```bash
   # Import Microsoft GPG key
   sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
@@ -256,7 +256,7 @@
   sudo dnf check-update
   sudo dnf install -y code
   ```
-  - IntelliJ IDEA:
+  - **IntelliJ IDEA:**
 
 ### Method 1: **Install IntelliJ IDEA using the official tarball (manual installation)**
 
