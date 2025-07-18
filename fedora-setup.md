@@ -176,12 +176,12 @@
     WantedBy=multi-user.target
     EOF
 
-    # Reload and enable the service
+  # Reload and enable the service
     sudo systemctl daemon-reexec
     sudo systemctl daemon-reload
     sudo systemctl enable --now cloudflared
 
-    # Configure systemd-resolved to use 127.0.0.1 (cloudflared)
+  # Configure systemd-resolved to use 127.0.0.1 (cloudflared)
     sudo mkdir -p /etc/systemd/resolved.conf.d
     sudo tee /etc/systemd/resolved.conf.d/dns-over-https.conf > /dev/null <<'EOF'
     [Resolve]
@@ -191,21 +191,21 @@
     Cache=yes
     EOF
 
-    # Tell NetworkManager to use systemd-resolved
+  # Tell NetworkManager to use systemd-resolved
     sudo tee /etc/NetworkManager/conf.d/dns.conf > /dev/null <<'EOF'
     [main]
     dns=systemd-resolved
     EOF
 
-    # Restart services
+  # Restart services
     sudo systemctl restart cloudflared
     sudo systemctl restart systemd-resolved
     sudo systemctl restart NetworkManager
 
-    # Test DNS resolution
+  # Test DNS resolution
     dig +short example.com
 
-    # Check current DNS status
+  # Check current DNS status
     resolvectl status
   ```
 
