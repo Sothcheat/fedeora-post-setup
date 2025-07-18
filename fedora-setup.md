@@ -1,6 +1,20 @@
 # Complete Fedora 42 Workstation Setup Guide for ASUS Zenbook S16  
 *Optimized for Battery, Performance, Developer Tools, Modern Visuals & Dual Boot*
 
+## Table of Contents
+
+- [1. Preparation](#1-preparation)
+- [2. Installation](#2-installation)
+- [3. First Boot & Essential Updates](#3-first-boot--essential-updates)
+- [4. Enable Third-Party Repositories](#4-enable-third-party-repositories)
+- [5. Hardware Compatibility & Drivers](#5-hardware-compatibility--drivers)
+- [6. Power & Battery Life Optimization](#6-power--battery-life-optimization)
+- [7. Modern Visuals & Desktop Tuning](#7-modern-visuals--desktop-tuning)
+- [8. Essential Developer Tools](#8-essential-developer-tools)
+- [9. Additional Productivity & Usability Steps](#9-additional-productivity--usability-steps)
+- [10. Dual Boot Maintenance](#10-dual-boot-maintenance)
+- [11. Ongoing Best Practices](#11-ongoing-best-practices)
+
 ## 1. Preparation
 
 - **Backup your data:** Safeguard important files from the Zenbook and Windows partition.
