@@ -159,54 +159,54 @@
   - Then do the rest:
   ```
   # Create a systemd service for cloudflared
-sudo tee /etc/systemd/system/cloudflared.service > /dev/null <<'EOF'
-[Unit]
-Description=Cloudflared DNS-over-HTTPS proxy
-After=network.target
+    sudo tee /etc/systemd/system/cloudflared.service > /dev/null <<'EOF'
+    [Unit]
+    Description=Cloudflared DNS-over-HTTPS proxy
+    After=network.target
 
-[Service]
-ExecStart=/usr/bin/cloudflared proxy-dns --upstream https://1.1.1.1/dns-query --upstream https://1.0.0.1/dns-query
-Restart=on-failure
-User=nobody
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-NoNewPrivileges=true
+    [Service]
+    ExecStart=/usr/bin/cloudflared proxy-dns --upstream https://1.1.1.1/dns-query --upstream https://1.0.0.1/dns-query
+    Restart=on-failure
+    User=nobody
+    CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+    AmbientCapabilities=CAP_NET_BIND_SERVICE
+    NoNewPrivileges=true
 
-[Install]
-WantedBy=multi-user.target
-EOF
+    [Install]
+    WantedBy=multi-user.target
+    EOF
 
-# Reload and enable the service
-sudo systemctl daemon-reexec
-sudo systemctl daemon-reload
-sudo systemctl enable --now cloudflared
+    # Reload and enable the service
+    sudo systemctl daemon-reexec
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now cloudflared
 
-# Configure systemd-resolved to use 127.0.0.1 (cloudflared)
-sudo mkdir -p /etc/systemd/resolved.conf.d
-sudo tee /etc/systemd/resolved.conf.d/dns-over-https.conf > /dev/null <<'EOF'
-[Resolve]
-DNS=127.0.0.1
-FallbackDNS=1.1.1.1
-DNSSEC=yes
-Cache=yes
-EOF
+    # Configure systemd-resolved to use 127.0.0.1 (cloudflared)
+    sudo mkdir -p /etc/systemd/resolved.conf.d
+    sudo tee /etc/systemd/resolved.conf.d/dns-over-https.conf > /dev/null <<'EOF'
+    [Resolve]
+    DNS=127.0.0.1
+    FallbackDNS=1.1.1.1
+    DNSSEC=yes
+    Cache=yes
+    EOF
 
-# Tell NetworkManager to use systemd-resolved
-sudo tee /etc/NetworkManager/conf.d/dns.conf > /dev/null <<'EOF'
-[main]
-dns=systemd-resolved
-EOF
+    # Tell NetworkManager to use systemd-resolved
+    sudo tee /etc/NetworkManager/conf.d/dns.conf > /dev/null <<'EOF'
+    [main]
+    dns=systemd-resolved
+    EOF
 
-# Restart services
-sudo systemctl restart cloudflared
-sudo systemctl restart systemd-resolved
-sudo systemctl restart NetworkManager
+    # Restart services
+    sudo systemctl restart cloudflared
+    sudo systemctl restart systemd-resolved
+    sudo systemctl restart NetworkManager
 
-# Test DNS resolution
-dig +short example.com
+    # Test DNS resolution
+    dig +short example.com
 
-# Check current DNS status
-resolvectl status
+    # Check current DNS status
+    resolvectl status
   ```
 
 ## 7. Modern Visuals & Desktop Tuning
