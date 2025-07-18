@@ -341,37 +341,37 @@ flatpak run com.jetbrains.IntelliJ-IDEA-Community
   You can keep your Flatpak apps up to date automatically. This setup updates your Flatpaks every 24 hours and especially helpful if you disable GNOME Software on startup.
   ```
   # Create the service unit
-sudo tee /etc/systemd/system/flatpak-update.service > /dev/null <<'EOF'
-[Unit]
-Description=Update Flatpak apps automatically
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/flatpak update -y --noninteractive
-EOF
-
-# Create the timer unit
-sudo tee /etc/systemd/system/flatpak-update.timer > /dev/null <<'EOF'
-[Unit]
-Description=Run Flatpak update every 24 hours
-Wants=network-online.target
-Requires=network-online.target
-After=network-online.target
-
-[Timer]
-OnBootSec=120
-OnUnitActiveSec=24h
-
-[Install]
-WantedBy=timers.target
-EOF
-
-# Reload systemd and enable the timer
-sudo systemctl daemon-reload
-sudo systemctl enable --now flatpak-update.timer
-
-# Check the status to verify everything is working
-sudo systemctl status flatpak-update.timer
+  sudo tee /etc/systemd/system/flatpak-update.service > /dev/null <<'EOF'
+  [Unit]
+  Description=Update Flatpak apps automatically
+  
+  [Service]
+  Type=oneshot
+  ExecStart=/usr/bin/flatpak update -y --noninteractive
+  EOF
+  
+  # Create the timer unit
+  sudo tee /etc/systemd/system/flatpak-update.timer > /dev/null <<'EOF'
+  [Unit]
+  Description=Run Flatpak update every 24 hours
+  Wants=network-online.target
+  Requires=network-online.target
+  After=network-online.target
+  
+  [Timer]
+  OnBootSec=120
+  OnUnitActiveSec=24h
+  
+  [Install]
+  WantedBy=timers.target
+  EOF
+  
+  # Reload systemd and enable the timer
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now flatpak-update.timer
+  
+  # Check the status to verify everything is working
+  sudo systemctl status flatpak-update.timer
   ```
 
 ## 9. Additional Productivity & Usability Steps
