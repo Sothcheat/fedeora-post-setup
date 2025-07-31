@@ -65,6 +65,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-© 2025 [Sothcheat Bunna]
+© 2025 Sothcheat Bunna
 
 **Happy Fedora setup!**
