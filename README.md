@@ -61,6 +61,10 @@ Feel free to open issues or submit pull requests if you find bugs or want to sug
 
 ## License
 
-Please add your license info here if applicable.
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+© 2025 [Your Name or Your Organization]
 
 **Happy Fedora setup!**
