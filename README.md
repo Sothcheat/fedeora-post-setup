@@ -1,4 +1,4 @@
-# Fedora Noble Setup
+# Fedora Post Setup
 
 Automated post-installation setup script for Fedora 42 Workstation and KDE Plasma.
 
