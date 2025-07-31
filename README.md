@@ -3,6 +3,7 @@
 Automated post-installation setup script for Fedora 42 Workstation and KDE Plasma.
 
 This script installs essential applications, development tools, themes, fonts, configures shells and prompts, sets up GPU drivers, and much more to streamline your Fedora setup.
+Note: This is my personal development setup tailored for C++ and Java. If you want to customize the process—skip certain applications, change configurations, or tweak the setup—you can perform a manual installation instead, allowing you to tailor the script to your preferences.
 
 ## Quick Start
 
