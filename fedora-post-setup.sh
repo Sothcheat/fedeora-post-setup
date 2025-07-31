@@ -285,6 +285,11 @@ sudo dnf check-update
 sudo dnf install -y code
 step_end "Visual Studio Code installed"
 
+# Apache NetBeans 25
+step-start "📦 Installing NetBeans IDE via Flatpak..."
+sudo flatpak install -y flathub org.apache.netbeans
+step_end "✅ NetBeans IDE installed."
+
 # IntelliJ IDEA latest community edition
 step_start "💻 Downloading and installing latest IntelliJ IDEA Community Edition"
 IDEA_URL="https://download.jetbrains.com/idea/ideaIC.tar.gz"
