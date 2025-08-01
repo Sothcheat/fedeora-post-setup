@@ -11,13 +11,13 @@ This script installs essential applications, development tools, themes, fonts, c
 The simplest way to run the setup script is to use this one-line command in your terminal. It downloads and runs the latest script directly from GitHub:
 
 ```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedeora-noble-setup/main/setup.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/setup.sh)"
 ```
 
 Alternatively, if you prefer `wget`:
 
 ```bash
-/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedeora-noble-setup/main/setup.sh)"
+/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/setup.sh)"
 ```
 
 ## What happens when you run the script?
