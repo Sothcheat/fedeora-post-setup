@@ -1,4 +1,3 @@
-```markdown
 # Fedora Post-Install Setup
 
 Automated post-installation setup scripts for Fedora 42 Workstation and KDE Plasma.
@@ -7,7 +6,7 @@ This project includes two scripts tailored for distinct Fedora user needs:
 
 - **`beginner-setup.sh`** — A universal beginner-friendly setup script that installs essential drivers, codecs, fonts, basic developer tools, and system utilities making Fedora ready-to-use for new Linux users.
 - **`personal-setup.sh`** — A comprehensive personal development setup crafted for advanced users and developers, including IDEs, additional dev tools, productivity apps, custom themes, and more.
-```
+
 ---
 
 ## Quick Start
