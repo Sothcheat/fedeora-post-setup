@@ -1,17 +1,14 @@
 #!/bin/bash
+
 # Fedora 42 Post-Install Setup Script with Advanced Logging and Interactivity
-# Supports Workstation (GNOME) and KDE
-# Run as a user with sudo privileges
 
 set -euo pipefail
 IFS=$'\n\t'
 
 # === Setup Logging ===
-
 LOG_DIR="$HOME/fedora42-setup-logs"
 mkdir -p "$LOG_DIR"
 LOGFILE="$LOG_DIR/fedora42-setup-$(date +%Y%m%d_%H%M%S).log"
-
 exec > >(tee -a "$LOGFILE") 2>&1
 
 # === Colors ===
@@ -23,14 +20,11 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # === Functions ===
-
-log_info()   { echo -e "${GREEN}✅ [INFO]${NC} $*"; }
-log_warn()   { echo -e "${YELLOW}⚠️ [WARN]${NC} $*"; }
-log_error()  { echo -e "${RED}❌ [ERROR]${NC} $*" >&2; }
+log_info() { echo -e "${GREEN}✅ [INFO]${NC} $*"; }
+log_warn() { echo -e "${YELLOW}⚠️ [WARN]${NC} $*"; }
+log_error() { echo -e "${RED}❌ [ERROR]${NC} $*" >&2; }
 log_prompt() { echo -ne "${BLUE}❓ [INPUT]${NC} $*"; }
-
 confirm() {
-  # Loop until yes/no answer received
   while true; do
     log_prompt "$1 [y/n]: "
     read -r ans
@@ -41,7 +35,6 @@ confirm() {
     esac
   done
 }
-
 check_internet() {
   log_info "🌐 Checking internet connectivity..."
   if ! ping -c1 -W2 8.8.8.8 &>/dev/null; then
@@ -50,17 +43,15 @@ check_internet() {
   fi
   log_info "🌐 Internet connectivity confirmed."
 }
-
 choose_option() {
   local prompt="$1"
   shift
   local options=("$@")
   local opt
-
   while true; do
     echo -e "${CYAN}📋 ${prompt}${NC}"
     for i in "${!options[@]}"; do
-      echo "  $((i+1))) ${options[$i]}"
+      echo " $((i+1))) ${options[$i]}"
     done
     log_prompt "➡️ Enter choice [1-${#options[@]}]: "
     read -r opt
@@ -71,25 +62,26 @@ choose_option() {
     echo "❗ Invalid option. Try again."
   done
 }
-
 step_start() {
   echo -e "\n${CYAN}🔧 ==> Starting: $* ...${NC}"
   date +"[%Y-%m-%d %H:%M:%S] Starting: $*" >> "$LOGFILE"
 }
-
 step_end() {
   echo -e "${CYAN}✔️ ==> Completed: $*${NC}\n"
   date +"[%Y-%m-%d %H:%M:%S] Completed: $*" >> "$LOGFILE"
 }
 
+
 # === Start Script ===
 
 clear
-echo -e "${GREEN}🚀 Fedora 42 Post-Install Setup Script (with advanced logging and interactivity)${NC}"
+echo -e "${GREEN}🚀 Fedora 42 Post-Install Setup Script (with beginner-friendly GPU install)${NC}"
 echo "📄 Log file: $LOGFILE"
 
+# Check Internet connectivity early
 check_internet
 
+# Enable RPM Fusion and Flathub repos
 step_start "📦 Enabling RPM Fusion & Flathub repositories"
 sudo dnf install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
@@ -97,45 +89,116 @@ sudo dnf install -y \
 sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 step_end "Repositories enabled"
 
+# System update
 step_start "🔄 System upgrade (including all repos)"
 sudo dnf upgrade --refresh -y
 step_end "System upgraded"
 
-# GPU Driver Installation
-gpu_choice=$(choose_option "Select your GPU type:" \
-  "Intel/AMD only" "NVIDIA only" "Hybrid Intel/AMD + NVIDIA (Optimus)" "Skip GPU driver installation")
+# === Beginner-Friendly GPU Driver Installation ===
 
-step_start "🖥️ Installing GPU drivers - choice: $gpu_choice"
-case "$gpu_choice" in
-  "Intel/AMD only")
-    sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
-    sudo dnf install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
-    sudo dnf install -y intel-media-driver || true
-    ;;
-  "NVIDIA only")
-    sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda nvidia-vaapi-driver
-    ;;
-  "Hybrid Intel/AMD + NVIDIA (Optimus)")
-    sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU \
-                        mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld intel-media-driver || true
-    sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda nvidia-vaapi-driver
-    log_warn "For hybrid setups, consider installing prime-select or managing GPU switching with GNOME extensions."
-    ;;
-  "Skip GPU driver installation")
-    log_warn "User chose to skip GPU driver installation."
-    ;;
-  *)
-    log_error "Unknown GPU option: $gpu_choice. Skipping GPU driver installation."
-    ;;
-esac
-step_end "GPU driver installation phase"
+step_start "🖥️ GPU Drivers Installation"
 
+echo "Welcome! Please select your GPU brand to install the best drivers."
+echo "Note: Installing drivers may take some minutes as kernel modules compile."
+echo "You may run this multiple times if you have multiple GPUs (e.g., Intel + NVIDIA)."
+
+while true; do
+  echo -e "\nSelect your GPU brand:"
+  echo "  1) NVIDIA"
+  echo "  2) AMD"
+  echo "  3) Intel"
+  echo "  4) None / Skip GPU driver installation"
+
+  log_prompt "Enter choice [1-4]: "
+  read -r gpu_choice
+
+  case "$gpu_choice" in
+    1)
+      log_info "You chose NVIDIA GPU."
+      echo "⚠️ NVIDIA driver installation may take time while kernel modules build."
+      if confirm "Proceed with NVIDIA driver installation?"; then
+        step_start "Installing NVIDIA drivers"
+        # NVIDIA-specific macro for RTX 4000/5000 series
+        if lspci -nnk | grep -i nvidia | grep -E 'RTX 40|RTX 50|4090|5080|5090' &>/dev/null; then
+          echo "%_with_kmod_nvidia_open 1" | sudo tee /etc/rpm/macros.nvidia-kmod >/dev/null
+          log_warn "Detected RTX 4000/5000 series GPU, enabling special kernel module support."
+        else
+          sudo rm -f /etc/rpm/macros.nvidia-kmod 2>/dev/null || true
+        fi
+
+        sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda nvidia-vaapi-driver
+        sudo akmods --force
+        sudo dracut --force
+        sudo systemctl enable --now nvidia-persistenced.service || true
+        log_info "✅ NVIDIA drivers installed."
+        step_end "NVIDIA drivers installation"
+      else
+        log_warn "Skipped NVIDIA driver installation."
+      fi
+      ;;
+    2)
+      log_info "You chose AMD GPU."
+      echo "⚠️ AMD drivers include Mesa and multimedia acceleration, installation may take a couple of minutes."
+      if confirm "Proceed with AMD driver installation?"; then
+        step_start "Installing AMD drivers"
+        sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
+        sudo dnf install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+        log_info "✅ AMD GPU drivers installed."
+        step_end "AMD drivers installation"
+      else
+        log_warn "Skipped AMD driver installation."
+      fi
+      ;;
+    3)
+      log_info "You chose Intel integrated GPU."
+      echo "⚠️ Intel drivers and multimedia acceleration may take a minute to install."
+      if confirm "Proceed with Intel driver installation?"; then
+        step_start "Installing Intel drivers"
+        sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
+        sudo dnf install -y intel-media-driver || true       # Newer Intel GPUs (Tiger Lake+)
+        sudo dnf install -y intel-vaapi-driver || true       # Older Intel GPUs
+        log_info "✅ Intel GPU drivers installed."
+        step_end "Intel drivers installation"
+      else
+        log_warn "Skipped Intel driver installation."
+      fi
+      ;;
+    4)
+      log_warn "Skipping GPU driver installation as requested."
+      break
+      ;;
+    *)
+      echo "❌ Invalid option. Please enter a number between 1 and 4."
+      continue
+      ;;
+  esac
+
+  echo ""
+  if confirm "Would you like to install drivers for another GPU (useful for hybrid setups)?"; then
+    continue
+  else
+    break
+  fi
+done
+
+step_end "GPU Drivers Installation Completed"
+
+# === Multimedia Codecs (Universal) ===
+step_start "🎵 Installing Multimedia Codecs (audio, video, DVD, MP3, etc.)"
+sudo dnf install -y gstreamer1-plugins-base gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-libav \
+  ffmpeg ffmpeg-libs lame x264 x265
+sudo dnf install -y gstreamer1-plugins-ugly-free gstreamer1-plugins-ugly-free-extras-freeworld \
+  gstreamer1-plugins-bad-freeworld libdvdcss
+log_info "✅ Multimedia codecs installed — enjoy smooth playback."
+step_end "Codecs installed"
+
+# Set hostname
 step_start "🏷️ Setting hostname to 'fedora'"
 sudo hostnamectl set-hostname fedora
 step_end "Hostname set"
 
-# Install TLP minimal
-step_start "🔋 Installing TLP (power management)"
+# Install TLP for power management
+step_start "🔋 Installing TLP power management"
 sudo dnf install -y https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc$(rpm -E %fedora).noarch.rpm
 sudo dnf install -y tlp tlp-rdw
 sudo dnf remove -y tuned tuned-ppd || true
@@ -143,8 +206,8 @@ sudo systemctl mask systemd-rfkill.service systemd-rfkill.socket || true
 sudo systemctl enable --now tlp
 step_end "TLP installed and enabled"
 
-# Essential applications prompt
-if confirm "📦 Would you like to install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
+# Essential applications
+if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
   step_start "📥 Installing essential applications"
   sudo flatpak install -y flathub app.zen_browser.zen org.telegram.desktop
   sudo dnf install -y discord kate vlc
@@ -155,8 +218,8 @@ else
   log_warn "Skipped installation of essential applications"
 fi
 
-# Install FiraCode Nerd Font prompt
-if confirm "🔤 Install FiraCode Nerd Font?"; then
+# Fonts - FiraCode Nerd Font
+if confirm "🔤 Install FiraCode Nerd Font (programming-friendly font)?"; then
   step_start "📚 Installing FiraCode Nerd Font"
   mkdir -p ~/.local/share/fonts
   curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
@@ -167,8 +230,8 @@ else
   log_warn "Skipped FiraCode Nerd Font installation"
 fi
 
-# Zsh + Starship prompt
-if confirm "🛠️ Install and configure Zsh with Starship prompt?"; then
+# Zsh and Starship prompt
+if confirm "🛠️ Install and configure Zsh shell with Starship prompt for a friendly terminal?"; then
   step_start "⚙️ Installing Zsh and Starship prompt"
   sudo dnf install -y zsh
   current_shell=$(getent passwd "$USER" | cut -d: -f7)
@@ -190,8 +253,8 @@ else
   log_warn "Skipped Zsh and Starship prompt setup"
 fi
 
-# Development tools installation
-if confirm "🖥️ Install developer tools and programming languages (gcc, clang, Java JDK, git-all, python, nodejs, podman, docker)?"; then
+# Developer Tools
+if confirm "🖥️ Install development tools and languages (gcc, clang, Java JDK, git, python, node, podman, docker)?"; then
   step_start "📦 Installing development tools and languages"
   sudo dnf group install -y development-tools c-development
   sudo dnf install -y gcc clang cmake git-all python3-pip java-21-openjdk-devel nodejs podman docker
@@ -201,8 +264,8 @@ else
   log_warn "Skipped developer tools installation"
 fi
 
-# KDE install prompt and desktop customization
-if confirm "🎨 Would you like to install KDE Plasma desktop environment?"; then
+# KDE Plasma Desktop Environment option
+if confirm "🎨 Install KDE Plasma desktop environment alongside GNOME?"; then
   step_start "🖥️ Installing KDE Plasma desktop"
   sudo dnf group install -y "KDE Plasma Workspaces"
   step_end "KDE Plasma installed"
@@ -210,46 +273,39 @@ else
   log_warn "Skipped KDE Plasma desktop installation"
 fi
 
-# Desktop environment customization choice
+# Desktop theme and icon packs
 de_choice=$(choose_option "🖼️ Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
 
-step_start "🎨 Installing Orchis theme and Tela icon theme (works on GNOME & KDE)"
-
+step_start "🎨 Installing Orchis GTK theme and Tela icon pack"
 cd "$HOME"
 if [[ ! -d Orchis-kde ]]; then
   git clone https://github.com/vinceliuice/Orchis-kde.git
 fi
-cd Orchis-kde
-./install.sh
-
+cd Orchis-kde && ./install.sh
 cd "$HOME"
 if [[ ! -d Tela-icon-theme ]]; then
   git clone https://github.com/vinceliuice/Tela-icon-theme.git
 fi
-cd Tela-icon-theme
-sudo ./install.sh -d /usr/share/icons
-
+cd Tela-icon-theme && sudo ./install.sh -d /usr/share/icons
 cd "$HOME"
 rm -rf Orchis-kde Tela-icon-theme
-step_end "Orchis theme & Tela icon theme installed"
+step_end "Orchis theme & Tela icons installed"
 
 if [[ "$de_choice" == "GNOME Workstation" ]]; then
   step_start "🖼️ Installing GNOME customization tools"
   sudo dnf install -y gnome-tweaks
   sudo flatpak install -y flathub com.mattjakeman.ExtensionManager
   step_end "GNOME customization tools installed"
-  echo "💡 Use GNOME Tweaks to select Orchis GTK theme and Tela icons."
+  echo "💡 Use GNOME Tweaks to select Orchis theme and Tela icons."
 elif [[ "$de_choice" == "KDE Plasma" ]]; then
   step_start "🎨 Installing KDE customization tools"
   sudo dnf install -y kvantum
-  if command -v kbuildsycoca5 &>/dev/null; then
-    kbuildsycoca5
-  fi
+  if command -v kbuildsycoca5 &>/dev/null; then kbuildsycoca5; fi
   step_end "KDE customization tools installed"
   echo "💡 Use KDE System Settings to apply Orchis theme and Tela icon pack."
 fi
 
-# Faster boot optimization
+# Faster boot optimization option
 if confirm "⚡ Disable NetworkManager-wait-online.service for faster boot?"; then
   step_start "Disabling NetworkManager-wait-online.service"
   sudo systemctl disable NetworkManager-wait-online.service
@@ -271,7 +327,7 @@ step_end "Fonts and archive utilities installed"
 # Visual Studio Code
 step_start "💻 Installing Visual Studio Code"
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-sudo tee /etc/yum.repos.d/vscode.repo > /dev/null <<'EOF'
+sudo tee /etc/yum.repos.d/vscode.repo >/dev/null <<EOF
 [code]
 name=Visual Studio Code
 baseurl=https://packages.microsoft.com/yumrepos/vscode
@@ -285,17 +341,16 @@ sudo dnf check-update
 sudo dnf install -y code
 step_end "Visual Studio Code installed"
 
-# Apache NetBeans 25
-step-start "📦 Installing NetBeans IDE via Flatpak..."
+# Apache NetBeans IDE via Flatpak
+step_start "📦 Installing Apache NetBeans IDE via Flatpak"
 sudo flatpak install -y flathub org.apache.netbeans
-step_end "✅ NetBeans IDE installed."
+step_end "Apache NetBeans IDE installed"
 
-# IntelliJ IDEA latest community edition
-step_start "💻 Downloading and installing latest IntelliJ IDEA Community Edition"
+# IntelliJ IDEA Community Edition install
+step_start "💻 Downloading and installing IntelliJ IDEA Community Edition"
 IDEA_URL="https://download.jetbrains.com/idea/ideaIC.tar.gz"
 INSTALL_DIR="/opt/intellij-idea-community"
 TMP_TAR="/tmp/ideaIC-latest.tar.gz"
-
 if [[ ! -d "$INSTALL_DIR" ]]; then
   sudo curl -L -o "$TMP_TAR" "$IDEA_URL"
   sudo mkdir -p "$INSTALL_DIR"
@@ -308,17 +363,14 @@ if [[ ! -d "$INSTALL_DIR" ]]; then
 Version=1.0
 Type=Application
 Name=IntelliJ IDEA Community Edition
+Exec=$INSTALL_DIR/bin/idea.sh
 Icon=$INSTALL_DIR/bin/idea.png
-Exec=$INSTALL_DIR/bin/idea.sh %f
-Comment=Integrated Development Environment
+Comment=Java, Kotlin, C++ IDE
 Categories=Development;IDE;
 Terminal=false
-StartupWMClass=jetbrains-idea
+StartupNotify=true
 EOF
-    log_info "Created desktop entry for IntelliJ IDEA."
   fi
-else
-  log_warn "IntelliJ IDEA already installed at $INSTALL_DIR. Skipping download."
 fi
 step_end "IntelliJ IDEA installed"
 
@@ -327,22 +379,14 @@ step_start "⏰ Setting Windows RTC compatibility to local time = 0"
 sudo timedatectl set-local-rtc 0 --adjust-system-clock
 step_end "Windows RTC setting updated"
 
-# System cleanup
-step_start "🧹 Cleaning package caches and removing orphaned packages"
+# System Cleanup
+step_start "🧹 Cleaning up package caches"
 sudo dnf clean all
-sudo dnf autoremove -y
-step_end "System cleanup complete"
+sudo flatpak uninstall --unused -y
+step_end "Cleanup complete"
 
-echo -e "${GREEN}=====================================================================${NC}"
-echo -e "${GREEN}🎉 Fedora 42 Workstation & KDE Post-Install Setup Complete!${NC}"
-echo -e "📄 Log file saved as: ${LOGFILE}"
-echo -e "⌛ Please reboot your system to apply all changes."
-echo -e "🔧 Remember to configure Ghostty terminal and other manual settings as needed."
-echo -e "🛠️ Use your separate TLP config script for advanced battery management."
-echo -e "${GREEN}=====================================================================${NC}"
+# Final message
+echo -e "${GREEN}🎉 All done! Please restart your computer to finalize the setup. Enjoy Fedora! 🚀${NC}"
+echo "If you need help, consult the README or ask in the community."
 
-if confirm "🔄 Reboot now?"; then
-  sudo reboot
-else
-  echo "💤 Reboot postponed by user. Please reboot later."
-fi
+exit 0
