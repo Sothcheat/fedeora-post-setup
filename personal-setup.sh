@@ -187,10 +187,10 @@ step_end "GPU Drivers Installation Completed"
 
 # === Multimedia Codecs (Universal) ===
 step_start "🎵 Installing Multimedia Codecs (audio, video, DVD, MP3, etc.)"
-sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y
 sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame\* --exclude=gstreamer1-plugins-bad-free-devel
 sudo dnf group install -y sound-and-video
-sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+sudo dnf update -y @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 log_info "✅ Multimedia codecs installed — enjoy smooth playback."
 step_end "Codecs installed"
 
@@ -203,6 +203,7 @@ step_end "Hostname set"
 if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
   step_start "📥 Installing essential applications"
   sudo flatpak install -y flathub app.zen_browser.zen org.telegram.desktop
+  sudo dnf remove -y firefox
   sudo dnf install -y discord kate vlc
   sudo dnf copr enable -y scottames/ghostty
   sudo dnf install -y ghostty
@@ -271,7 +272,7 @@ elif [[ "$de_choice" == "KDE Plasma" ]]; then
   sudo dnf install -y kvantum
   if command -v kbuildsycoca5 &>/dev/null; then kbuildsycoca5; fi
   step_end "KDE customization tools installed"
-  echo "💡 Use KDE System Settings to apply Orchis theme and Tela icon pack."
+  echo "💡 Use KDE System Settings to customize further more."
 fi
 
 # Faster boot optimization option
