@@ -259,7 +259,9 @@ else
 fi
 
 # Desktop Customization
+log_info "Prompting user for desktop environment choice..."
 de_choice=$(choose_option "🖼️ Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
+log_info "User selected desktop environment: $de_choice"
 
 if [[ "$de_choice" == "GNOME Workstation" ]]; then
   step_start "🖼️ Installing GNOME customization tools"
@@ -272,7 +274,7 @@ elif [[ "$de_choice" == "KDE Plasma" ]]; then
   sudo dnf install -y kvantum
   if command -v kbuildsycoca5 &>/dev/null; then kbuildsycoca5; fi
   step_end "KDE customization tools installed"
-  echo "💡 Use KDE System Settings to customize further more."
+  echo "💡 Use KDE System Settings to customize further."
 fi
 
 # Faster boot optimization option
