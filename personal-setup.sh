@@ -258,62 +258,49 @@ else
   log_warn "Skipped developer tools installation"
 fi
 
-choose_option() {
-  local prompt="$1"
-  shift
-  local options=("$@")
-  local opt
-
-  while true; do
-    echo -e "${CYAN}📋 ${prompt}${NC}"
-    for i in "${!options[@]}"; do
-      echo " $((i+1))) ${options[$i]}"
-    done
-    read -rp "➡️ Enter choice [1-${#options[@]}]: " opt
-
-    if [[ "$opt" =~ ^[1-9][0-9]*$ ]] && (( opt >= 1 && opt <= ${#options[@]} )); then
-      echo "${options[$((opt-1))]}"
-      return 0
-    else
-      echo "❗ Invalid option. Please try again."
-    fi
-  done
-}
-
-log_info() {
-  echo -e "\033[0;32m✅ [INFO]\033[0m $*"
-}
-
-step_start() {
-  echo -e "\n\033[0;36m🔧 ==> Starting: $* ...\033[0m"
-}
-
-step_end() {
-  echo -e "\033[0;36m✔️ ==> Completed: $* \n\033[0m"
-}
-
 # Desktop Customization snippet:
-log_info "Prompting user for desktop environment choice..."
-de_choice=$(choose_option "Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
-log_info "User selected desktop environment: $de_choice"
+step_start "🎨 Customize Fedora"
 
-if [[ "$de_choice" == "GNOME Workstation" ]]; then
-  step_start "Installing GNOME customization tools"
-  sudo dnf install -y gnome-tweaks
-  sudo flatpak install -y flathub com.mattjakeman.ExtensionManager
-  step_end "GNOME customization tools installed"
-  echo "💡 Use GNOME Tweaks to select Orchis theme and Tela icons."
-elif [[ "$de_choice" == "KDE Plasma" ]]; then
-  step_start "Installing KDE customization tools"
-  sudo dnf install -y kvantum
-  if command -v kbuildsycoca5 &>/dev/null; then
-    kbuildsycoca5
-  fi
-  step_end "KDE customization tools installed"
-  echo "💡 Use KDE System Settings to customize further."
-else
-  echo "⚠️ Unrecognized option. No customization tools installed."
-fi
+echo "Pick your Desktop Environment that you're running on."
+
+while true; do
+  echo -e "\nSelect your Desktop Environment:"
+  echo "  1) Gnome"
+  echo "  2) KDE Plasma"
+  echo "  3) Skip customize"
+  
+  log_prompt "Enter choice [1-3]: "
+  read -r de_choice
+
+  case "$de_choice" in
+    1)
+      log_info "You chose Gnome."
+      step_start "Installing Gnome Customization Applications"
+      sudo dnf install -y gnome-tweaks
+      flatpak install -y flathub com.mattjakeman.ExtensionManager
+      log_info "✅ Gnome Customization Applications installed."
+      step_end "Gnome Customization installation"
+      break  # exit loop after successful install
+      ;;
+    2)
+      log_info "You chose KDE Plasma."
+      step_start "Installing KDE Plasma Customization Applications"
+      sudo dnf install -y kvantum
+      log_info "✅ KDE Plasma Customization Applications installed."
+      step_end "KDE Plasma Customization installation"
+      break  # exit loop after successful install
+      ;;
+    3)
+      log_warn "Skipping Fedora Customization installation as requested."
+      break  # exit loop as user requested skip
+      ;;
+    *)
+      echo "❌ Invalid option. Please enter a number between 1 and 3."
+      ;;
+  esac
+done
+
+step_end "Fedora Customization installation completed."
 
 # Faster boot optimization option
 if confirm "⚡ Disable NetworkManager-wait-online.service for faster boot?"; then
