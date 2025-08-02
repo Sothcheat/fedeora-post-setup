@@ -258,23 +258,61 @@ else
   log_warn "Skipped developer tools installation"
 fi
 
-# Desktop Customization
+choose_option() {
+  local prompt="$1"
+  shift
+  local options=("$@")
+  local opt
+
+  while true; do
+    echo -e "${CYAN}📋 ${prompt}${NC}"
+    for i in "${!options[@]}"; do
+      echo " $((i+1))) ${options[$i]}"
+    done
+    read -rp "➡️ Enter choice [1-${#options[@]}]: " opt
+
+    if [[ "$opt" =~ ^[1-9][0-9]*$ ]] && (( opt >= 1 && opt <= ${#options[@]} )); then
+      echo "${options[$((opt-1))]}"
+      return 0
+    else
+      echo "❗ Invalid option. Please try again."
+    fi
+  done
+}
+
+log_info() {
+  echo -e "\033[0;32m✅ [INFO]\033[0m $*"
+}
+
+step_start() {
+  echo -e "\n\033[0;36m🔧 ==> Starting: $* ...\033[0m"
+}
+
+step_end() {
+  echo -e "\033[0;36m✔️ ==> Completed: $* \n\033[0m"
+}
+
+# Desktop Customization snippet:
 log_info "Prompting user for desktop environment choice..."
-de_choice=$(choose_option "🖼️ Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
+de_choice=$(choose_option "Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
 log_info "User selected desktop environment: $de_choice"
 
 if [[ "$de_choice" == "GNOME Workstation" ]]; then
-  step_start "🖼️ Installing GNOME customization tools"
+  step_start "Installing GNOME customization tools"
   sudo dnf install -y gnome-tweaks
   sudo flatpak install -y flathub com.mattjakeman.ExtensionManager
   step_end "GNOME customization tools installed"
   echo "💡 Use GNOME Tweaks to select Orchis theme and Tela icons."
 elif [[ "$de_choice" == "KDE Plasma" ]]; then
-  step_start "🎨 Installing KDE customization tools"
+  step_start "Installing KDE customization tools"
   sudo dnf install -y kvantum
-  if command -v kbuildsycoca5 &>/dev/null; then kbuildsycoca5; fi
+  if command -v kbuildsycoca5 &>/dev/null; then
+    kbuildsycoca5
+  fi
   step_end "KDE customization tools installed"
   echo "💡 Use KDE System Settings to customize further."
+else
+  echo "⚠️ Unrecognized option. No customization tools installed."
 fi
 
 # Faster boot optimization option
