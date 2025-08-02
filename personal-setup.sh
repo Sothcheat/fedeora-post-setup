@@ -345,9 +345,13 @@ fi
 step_end "IntelliJ IDEA installed"
 
 # Windows RTC dual boot fix
+if confirm "⚡️Are you dual boot with Windows or not?"; then
 step_start "⏰ Setting Windows RTC compatibility to local time = 0"
 sudo timedatectl set-local-rtc 0 --adjust-system-clock
 step_end "Windows RTC setting updated"
+else
+  log_warn "Skipped dual boot fix."
+fi
 
 # System Cleanup
 step_start "🧹 Cleaning up package caches"
