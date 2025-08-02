@@ -127,7 +127,7 @@ done
 step_end "GPU Drivers Installation"
 
 # === Multimedia Codecs (Universal) ===
-step_start "🎵 Installing Multimedia Codecs (audio, video, DVD, MP3, etc.)"
+step_start "🎵 Installing Multimedia Codecs (audio, video, MP3, etc.)"
 sudo dnf swap ffmpeg-free ffmpeg --allowerasing
 sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame\* --exclude=gstreamer1-plugins-bad-free-devel
 sudo dnf group install -y sound-and-video
