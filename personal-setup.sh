@@ -199,15 +199,6 @@ step_start "🏷️ Setting hostname to 'fedora'"
 sudo hostnamectl set-hostname fedora
 step_end "Hostname set"
 
-# Install TLP for power management
-step_start "🔋 Installing TLP power management"
-sudo dnf install -y https://repo.linrunner.de/fedora/tlp/repos/releases/tlp-release.fc$(rpm -E %fedora).noarch.rpm
-sudo dnf install -y tlp tlp-rdw
-sudo dnf remove -y tuned tuned-ppd || true
-sudo systemctl mask systemd-rfkill.service systemd-rfkill.socket || true
-sudo systemctl enable --now tlp
-step_end "TLP installed and enabled"
-
 # Essential applications
 if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
   step_start "📥 Installing essential applications"
@@ -266,32 +257,8 @@ else
   log_warn "Skipped developer tools installation"
 fi
 
-# KDE Plasma Desktop Environment option
-if confirm "🎨 Install KDE Plasma desktop environment alongside GNOME?"; then
-  step_start "🖥️ Installing KDE Plasma desktop"
-  sudo dnf group install -y "KDE Plasma Workspaces"
-  step_end "KDE Plasma installed"
-else
-  log_warn "Skipped KDE Plasma desktop installation"
-fi
-
-# Desktop theme and icon packs
+# Desktop Customization
 de_choice=$(choose_option "🖼️ Choose your desktop environment for customization:" "GNOME Workstation" "KDE Plasma")
-
-step_start "🎨 Installing Orchis GTK theme and Tela icon pack"
-cd "$HOME"
-if [[ ! -d Orchis-kde ]]; then
-  git clone https://github.com/vinceliuice/Orchis-kde.git
-fi
-cd Orchis-kde && ./install.sh
-cd "$HOME"
-if [[ ! -d Tela-icon-theme ]]; then
-  git clone https://github.com/vinceliuice/Tela-icon-theme.git
-fi
-cd Tela-icon-theme && sudo ./install.sh -d /usr/share/icons
-cd "$HOME"
-rm -rf Orchis-kde Tela-icon-theme
-step_end "Orchis theme & Tela icons installed"
 
 if [[ "$de_choice" == "GNOME Workstation" ]]; then
   step_start "🖼️ Installing GNOME customization tools"
