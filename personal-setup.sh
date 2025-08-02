@@ -130,6 +130,7 @@ while true; do
         sudo akmods --force
         sudo dracut --force
         sudo systemctl enable --now nvidia-persistenced.service || true
+        sudo dnf install libva-nvidia-driver
         log_info "✅ NVIDIA drivers installed."
         step_end "NVIDIA drivers installation"
       else
@@ -142,7 +143,8 @@ while true; do
       if confirm "Proceed with AMD driver installation?"; then
         step_start "Installing AMD drivers"
         sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
-        sudo dnf install -y mesa-va-drivers-freeworld mesa-vdpau-drivers-freeworld
+        sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
+        sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
         log_info "✅ AMD GPU drivers installed."
         step_end "AMD drivers installation"
       else
@@ -185,10 +187,10 @@ step_end "GPU Drivers Installation Completed"
 
 # === Multimedia Codecs (Universal) ===
 step_start "🎵 Installing Multimedia Codecs (audio, video, DVD, MP3, etc.)"
-sudo dnf install -y gstreamer1-plugins-base gstreamer1-plugins-good gstreamer1-plugins-bad-free gstreamer1-libav \
-  ffmpeg ffmpeg-libs lame x264 x265
-sudo dnf install -y gstreamer1-plugins-ugly-free gstreamer1-plugins-ugly-free-extras-freeworld \
-  gstreamer1-plugins-bad-freeworld libdvdcss
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame\* --exclude=gstreamer1-plugins-bad-free-devel
+sudo dnf group install -y sound-and-video
+sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 log_info "✅ Multimedia codecs installed — enjoy smooth playback."
 step_end "Codecs installed"
 
