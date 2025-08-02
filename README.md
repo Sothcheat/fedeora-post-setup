@@ -57,7 +57,7 @@ or using `wget`:
 - Developer toolchains for C/C++, Java (OpenJDK 21), Python, Node.js, Docker, and Podman.
 - Popular IDEs: Visual Studio Code, IntelliJ IDEA Community Edition, Apache NetBeans.
 - Optional KDE Plasma desktop alongside GNOME.
-- Desktop themes and icon packs (Orchis GTK theme, Tela icons).
+- Desktop Customization (Gnome-tweak, Extension-manager, kvantum)
 - Personal productivity apps and terminal utilities.
 - Windows dual boot RTC fix and other personal tweaks.
 
