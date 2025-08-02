@@ -46,7 +46,7 @@ or using `wget`:
 - Enables **RPM Fusion Free & Nonfree** repositories and **Flathub** Flatpak repo.
 - Updates and upgrades your entire Fedora system.
 - Interactive GPU driver installation tailored for your hardware (NVIDIA, AMD, Intel).
-- Installs **multimedia codecs** for smooth audio/video playback and DVD support.
+- Installs **multimedia codecs** for smooth audio/video playback.
 - Configures programming fonts (e.g., FiraCode Nerd Font).
 - Sets up **Zsh shell** with **Starship prompt** (optional).
 - Enables and configures firewall (`firewalld`).
