@@ -143,8 +143,8 @@ while true; do
       if confirm "Proceed with AMD driver installation?"; then
         step_start "Installing AMD drivers"
         sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
-        sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
-        sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+        sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld
+        sudo dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
         log_info "✅ AMD GPU drivers installed."
         step_end "AMD drivers installation"
       else
@@ -358,30 +358,7 @@ step_end "Apache NetBeans IDE installed"
 
 # IntelliJ IDEA Community Edition install
 step_start "💻 Downloading and installing IntelliJ IDEA Community Edition"
-IDEA_URL="https://download.jetbrains.com/idea/ideaIC.tar.gz"
-INSTALL_DIR="/opt/intellij-idea-community"
-TMP_TAR="/tmp/ideaIC-latest.tar.gz"
-if [[ ! -d "$INSTALL_DIR" ]]; then
-  sudo curl -L -o "$TMP_TAR" "$IDEA_URL"
-  sudo mkdir -p "$INSTALL_DIR"
-  sudo tar -xzf "$TMP_TAR" -C "$INSTALL_DIR" --strip-components=1
-  rm "$TMP_TAR"
-  local_desktop_entry="$HOME/.local/share/applications/jetbrains-idea.desktop"
-  if [[ ! -f "$local_desktop_entry" ]]; then
-    cat > "$local_desktop_entry" <<EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=IntelliJ IDEA Community Edition
-Exec=$INSTALL_DIR/bin/idea.sh
-Icon=$INSTALL_DIR/bin/idea.png
-Comment=Java, Kotlin, C++ IDE
-Categories=Development;IDE;
-Terminal=false
-StartupNotify=true
-EOF
-  fi
-fi
+flatpak install -y flathub com.jetbrains.IntelliJ-IDEA-Community
 step_end "IntelliJ IDEA installed"
 
 # Windows RTC dual boot fix
