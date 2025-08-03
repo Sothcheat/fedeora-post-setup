@@ -224,28 +224,108 @@ else
   log_warn "Skipped FiraCode Nerd Font installation"
 fi
 
-# Zsh and Starship prompt
-if confirm "🛠️ Install and configure Zsh shell with Starship prompt for a friendly terminal?"; then
-  step_start "⚙️ Installing Zsh and Starship prompt"
-  sudo dnf install -y zsh
+# === Zsh with Oh My Zsh and Oh My Posh prompt ===
+if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Posh prompt?"; then
+  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
+
+  # Install Zsh and dependencies (Fedora uses dnf, not apt)
+  sudo dnf install -y zsh curl unzip wget
+
+  # Install Oh My Zsh (unattended)
+  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  else
+    log_info "Oh My Zsh already installed"
+  fi
+
+  # Set zsh as default shell if not already
   current_shell=$(getent passwd "$USER" | cut -d: -f7)
-  zsh_path=$(which zsh)
+  zsh_path=$(command -v zsh)
   if [[ "$current_shell" != "$zsh_path" ]]; then
     chsh -s "$zsh_path"
     log_info "Default shell changed to Zsh"
   else
     log_info "Zsh already default shell"
   fi
-  curl -fsSL https://starship.rs/install.sh | sh -s -- -y
-  mkdir -p ~/.config
-  starship preset gruvbox-rainbow -o ~/.config/starship.toml || log_warn "Starship preset failed"
-  if ! grep -q 'starship init zsh' ~/.zshrc; then
-    echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+
+  # Backup existing .zshrc first
+  cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
+
+  # Create a minimal .zshrc with embedded plugin list and Oh My Zsh basics,
+  # plus Oh My Posh configuration to replace prompt
+
+  cat > ~/.zshrc <<'EOF'
+# Path to Oh My Zsh installation
+export ZSH="$HOME/.oh-my-zsh"
+
+# Load Oh My Zsh framework
+ZSH_THEME=""  # Theme disabled, using Oh My Posh instead
+
+# Plugins as per gist from https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df
+plugins=(
+    git 
+    zsh-autosuggestions 
+    zsh-syntax-highlighting 
+    fast-syntax-highlighting 
+    zsh-autocomplete
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# Load Oh My Posh prompt
+eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
+
+EOF
+
+  log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
+
+  # Install Oh My Posh binary (latest Linux AMD64 stable release)
+
+  OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
+  mkdir -p "$(dirname "$OMP_BIN_PATH")"
+
+  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
+  wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
+  chmod +x "$OMP_BIN_PATH"
+  log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
+
+  # Download 'atomic' Oh My Posh theme JSON 
+  mkdir -p ~/.poshthemes
+  if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
+    wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
+    log_info "'atomic' Oh My Posh theme downloaded"
+  else
+    log_info "'atomic' Oh My Posh theme already exists"
   fi
-  step_end "Zsh and Starship prompt installed and configured"
+
+  # Ensure ~/.local/bin is in PATH for future sessions
+  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
+    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
+    log_info "Added ~/.local/bin to PATH in .zshrc"
+  fi
+
+  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
+
 else
-  log_warn "Skipped Zsh and Starship prompt setup"
+  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
 fi
+
+# === Ghostty terminal configuration ===
+step_start "🖥️ Configuring Ghostty terminal"
+
+GHOSTTY_CONFIG_DIR="$HOME/.config/ghostty"
+GHOSTTY_CONFIG_FILE="$GHOSTTY_CONFIG_DIR/config"
+mkdir -p "$GHOSTTY_CONFIG_DIR"
+
+cat > "$GHOSTTY_CONFIG_FILE" <<EOF
+font-family = FiraCode Nerd Font
+font-size = 14
+background-opacity = 0.9
+theme = Everforest Dark - Hard
+EOF
+
+log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
+step_end "Ghostty terminal configured"
 
 # Developer Tools
 if confirm "🖥️ Install development tools and languages (gcc, clang, Java JDK, git, python, node, podman, docker)?"; then

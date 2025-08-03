@@ -153,21 +153,42 @@ else
   log_warn "Skipped FiraCode Nerd Font install."
 fi
 
-# === Zsh & Starship Prompt for Terminal (Friendly) ===
-if confirm "🛠️ Make terminal beginner-friendly with Zsh + Starship?"; then
-  step_start "⚙️ Installing Zsh & Starship"
-  sudo dnf install -y zsh
-  chsh -s "$(which zsh)"
-  curl -fsSL https://starship.rs/install.sh | sh -s -- -y
-  mkdir -p ~/.config
-  starship preset gruvbox-rainbow -o ~/.config/starship.toml || log_warn "Starship preset failed"
-  if ! grep -q 'starship init zsh' ~/.zshrc; then
-    echo 'eval "$(starship init zsh)"' >> ~/.zshrc
+# === Minimal Zsh Setup ===
+if confirm "Install Zsh shell with Oh My Zsh basic setup?"; then
+  step_start "Installing Zsh and Oh My Zsh"
+
+  # Fedora uses dnf, not apt
+  sudo dnf install -y zsh curl wget
+
+  # Install Oh My Zsh (unattended)
+  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  else
+    log_info "Oh My Zsh already installed"
   fi
-  log_info "Next time you open a terminal, you'll see a colorful prompt!"
-  step_end "Zsh & Starship setup"
+
+  # Set zsh as default shell if not already
+  current_shell=$(getent passwd "$USER" | cut -d: -f7)
+  zsh_path=$(command -v zsh)
+  if [[ "$current_shell" != "$zsh_path" ]]; then
+    chsh -s "$zsh_path"
+    log_info "Default shell changed to Zsh"
+  else
+    log_info "Zsh already default shell"
+  fi
+
+  # Create a minimal .zshrc
+  cat > ~/.zshrc <<'EOF'
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git)
+source $ZSH/oh-my-zsh.sh
+EOF
+
+  log_info "Minimal .zshrc created with Oh My Zsh and git plugin."
+  step_end "Zsh and Oh My Zsh installed"
 else
-  log_warn "Skipped Zsh and Starship setup."
+  log_warn "Skipped Zsh and Oh My Zsh setup"
 fi
 
 # === Minimal Dev Tools (Beginner-Friendly) ===
