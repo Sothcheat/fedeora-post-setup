@@ -71,7 +71,6 @@ step_end() {
   date +"[%Y-%m-%d %H:%M:%S] Completed: $*" >> "$LOGFILE"
 }
 
-
 # === Start Script ===
 
 clear
@@ -86,7 +85,7 @@ step_start "📦 Enabling RPM Fusion & Flathub repositories"
 sudo dnf install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 step_end "Repositories enabled"
 
 # System update
@@ -130,7 +129,7 @@ while true; do
         sudo akmods --force
         sudo dracut --force
         sudo systemctl enable --now nvidia-persistenced.service || true
-        sudo dnf install libva-nvidia-driver
+        sudo dnf install -y libva-nvidia-driver
         log_info "✅ NVIDIA drivers installed."
         step_end "NVIDIA drivers installation"
       else
@@ -202,11 +201,11 @@ step_end "Hostname set"
 # Essential applications
 if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
   step_start "📥 Installing essential applications"
-  sudo flatpak install -y flathub app.zen_browser.zen org.telegram.desktop
+  flatpak install -y --or-update flathub app.zen_browser.zen org.telegram.desktop
   sudo dnf remove -y firefox
   sudo dnf install -y discord kate vlc
-  sudo dnf copr enable -y scottames/ghostty
-  sudo dnf install -y ghostty
+  sudo dnf copr enable -y scottames/ghostty || log_warn "Ghostty COPR repo enable failed"
+  sudo dnf install -y ghostty || log_warn "Ghostty install failed"
   step_end "Essential applications installed"
 else
   log_warn "Skipped installation of essential applications"
@@ -215,6 +214,7 @@ fi
 # Fonts - FiraCode Nerd Font
 if confirm "🔤 Install FiraCode Nerd Font (programming-friendly font)?"; then
   step_start "📚 Installing FiraCode Nerd Font"
+  sudo dnf install -y unzip
   mkdir -p ~/.local/share/fonts
   curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
   unzip -o ~/.local/share/fonts/FiraCode.zip -d ~/.local/share/fonts/FiraCode
@@ -238,7 +238,7 @@ if confirm "🛠️ Install and configure Zsh shell with Starship prompt for a f
   fi
   curl -fsSL https://starship.rs/install.sh | sh -s -- -y
   mkdir -p ~/.config
-  starship preset gruvbox-rainbow -o ~/.config/starship.toml
+  starship preset gruvbox-rainbow -o ~/.config/starship.toml || log_warn "Starship preset failed"
   if ! grep -q 'starship init zsh' ~/.zshrc; then
     echo 'eval "$(starship init zsh)"' >> ~/.zshrc
   fi
@@ -251,8 +251,8 @@ fi
 if confirm "🖥️ Install development tools and languages (gcc, clang, Java JDK, git, python, node, podman, docker)?"; then
   step_start "📦 Installing development tools and languages"
   sudo dnf group install -y development-tools c-development
-  sudo dnf install -y gcc clang cmake git-all python3-pip java-21-openjdk-devel nodejs podman docker
-  sudo systemctl enable --now docker
+  sudo dnf install -y gcc clang cmake git-all python3-pip java-21-openjdk-devel nodejs podman docker || log_warn "Some dev tools failed to install"
+  sudo systemctl enable --now docker || log_warn "Docker service enable failed"
   step_end "Development tools installed"
 else
   log_warn "Skipped developer tools installation"
@@ -277,7 +277,7 @@ while true; do
       log_info "You chose Gnome."
       step_start "Installing Gnome Customization Applications"
       sudo dnf install -y gnome-tweaks
-      flatpak install -y flathub com.mattjakeman.ExtensionManager
+      flatpak install -y --or-update flathub com.mattjakeman.ExtensionManager
       log_info "✅ Gnome Customization Applications installed."
       step_end "Gnome Customization installation"
       break  # exit loop after successful install
@@ -305,7 +305,7 @@ step_end "Fedora Customization installation completed."
 # Faster boot optimization option
 if confirm "⚡ Disable NetworkManager-wait-online.service for faster boot?"; then
   step_start "Disabling NetworkManager-wait-online.service"
-  sudo systemctl disable NetworkManager-wait-online.service
+  sudo systemctl disable NetworkManager-wait-online.service || log_warn "Disable NetworkManager-wait-online failed"
   step_end "Disabled NetworkManager-wait-online.service"
 else
   log_warn "Skipped disabling NetworkManager-wait-online.service"
@@ -313,12 +313,12 @@ fi
 
 # Enable firewall
 step_start "🔥 Enabling FirewallD"
-sudo systemctl enable --now firewalld
+sudo systemctl enable --now firewalld || log_warn "FirewallD enable failed"
 step_end "FirewallD enabled"
 
 # Fonts and archive utilities
 step_start "📂 Installing fonts and archive utilities"
-sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig p7zip p7zip-plugins unrar
+sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig p7zip p7zip-plugins unrar || log_warn "Some font/archive utilities failed to install"
 step_end "Fonts and archive utilities installed"
 
 # Visual Studio Code
@@ -335,24 +335,24 @@ gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
 sudo dnf check-update
-sudo dnf install -y code
+sudo dnf install -y code || log_warn "VS Code install failed"
 step_end "Visual Studio Code installed"
 
 # Apache NetBeans IDE via Flatpak
 step_start "📦 Installing Apache NetBeans IDE via Flatpak"
-sudo flatpak install -y flathub org.apache.netbeans
+flatpak install -y --or-update flathub org.apache.netbeans
 step_end "Apache NetBeans IDE installed"
 
 # IntelliJ IDEA Community Edition install
 step_start "💻 Downloading and installing IntelliJ IDEA Community Edition"
-flatpak install -y flathub com.jetbrains.IntelliJ-IDEA-Community
+flatpak install -y --or-update flathub com.jetbrains.IntelliJ-IDEA-Community
 step_end "IntelliJ IDEA installed"
 
 # Windows RTC dual boot fix
 if confirm "⚡️Are you dual boot with Windows or not?"; then
-step_start "⏰ Setting Windows RTC compatibility to local time = 0"
-sudo timedatectl set-local-rtc 0 --adjust-system-clock
-step_end "Windows RTC setting updated"
+  step_start "⏰ Setting Windows RTC compatibility to local time = 0"
+  sudo timedatectl set-local-rtc 0 --adjust-system-clock || log_warn "timedatectl failed"
+  step_end "Windows RTC setting updated"
 else
   log_warn "Skipped dual boot fix."
 fi
@@ -360,7 +360,7 @@ fi
 # System Cleanup
 step_start "🧹 Cleaning up package caches"
 sudo dnf clean all
-sudo flatpak uninstall --unused -y
+flatpak uninstall --unused -y
 step_end "Cleanup complete"
 
 # Final message

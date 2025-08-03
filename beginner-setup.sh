@@ -54,7 +54,7 @@ step_start "📦 Enabling RPM Fusion & Flathub repositories"
 sudo dnf install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
   https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 step_end "Repos enabled"
 
 step_start "🔄 System Upgrade (all software)"
@@ -84,7 +84,7 @@ while true; do
         sudo akmods --force
         sudo dracut --force
         sudo systemctl enable --now nvidia-persistenced.service || true
-        sudo dnf install libva-nvidia-driver
+        sudo dnf install -y libva-nvidia-driver
         log_info "✅ NVIDIA drivers installed. Please reboot for changes."
         step_end "NVIDIA drivers"
       else
@@ -96,8 +96,8 @@ while true; do
       if confirm "Install AMD GPU drivers?"; then
         step_start "AMD GPU drivers"
         sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
-        sudo dnf swap mesa-va-drivers mesa-va-drivers-freeworld
-        sudo dnf swap mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
+        sudo dnf swap -y mesa-va-drivers mesa-va-drivers-freeworld
+        sudo dnf swap -y mesa-vdpau-drivers mesa-vdpau-drivers-freeworld
         log_info "✅ AMD drivers installed."
         step_end "AMD drivers"
       else
@@ -128,10 +128,10 @@ step_end "GPU Drivers Installation"
 
 # === Multimedia Codecs (Universal) ===
 step_start "🎵 Installing Multimedia Codecs (audio, video, MP3, etc.)"
-sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y
 sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame\* --exclude=gstreamer1-plugins-bad-free-devel
 sudo dnf group install -y sound-and-video
-sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
+sudo dnf update -y @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 log_info "✅ Multimedia codecs installed — enjoy smooth playback."
 step_end "Codecs installed"
 
@@ -143,6 +143,7 @@ step_end "Hostname set"
 # === Fonts - FiraCode Nerd Font ===
 if confirm "🔤 Install FiraCode Nerd Font (for easy-reading programming fonts)?"; then
   step_start "📚 Installing FiraCode Nerd Font"
+  sudo dnf install -y unzip
   mkdir -p ~/.local/share/fonts
   curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
   unzip -o ~/.local/share/fonts/FiraCode.zip -d ~/.local/share/fonts/FiraCode
@@ -159,7 +160,7 @@ if confirm "🛠️ Make terminal beginner-friendly with Zsh + Starship?"; then
   chsh -s "$(which zsh)"
   curl -fsSL https://starship.rs/install.sh | sh -s -- -y
   mkdir -p ~/.config
-  starship preset gruvbox-rainbow -o ~/.config/starship.toml
+  starship preset gruvbox-rainbow -o ~/.config/starship.toml || log_warn "Starship preset failed"
   if ! grep -q 'starship init zsh' ~/.zshrc; then
     echo 'eval "$(starship init zsh)"' >> ~/.zshrc
   fi
@@ -182,7 +183,7 @@ fi
 # === Faster Boot (Network Wait Disable) ===
 if confirm "⚡ Make Fedora boot faster (skip network wait)?"; then
   step_start "Disabling NetworkManager-wait-online.service"
-  sudo systemctl disable NetworkManager-wait-online.service
+  sudo systemctl disable NetworkManager-wait-online.service || log_warn "Disable NetworkManager-wait-online failed"
   step_end "NetworkManager-wait-online.service disabled"
 else
   log_warn "Skipped boot optimization."
@@ -190,12 +191,12 @@ fi
 
 # === Firewall ON (Best Practice) ===
 step_start "🔥 Enabling FirewallD (protection on by default)"
-sudo systemctl enable --now firewalld
+sudo systemctl enable --now firewalld || log_warn "FirewallD enable failed"
 step_end "Firewall enabled"
 
 # === Fonts and Archive Utilities ===
 step_start "📂 Installing fonts & archive utilities"
-sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig p7zip p7zip-plugins unrar
+sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig p7zip p7zip-plugins unrar || log_warn "Some font/archive utilities failed to install"
 step_end "Fonts & archive utilities installed"
 
 # === Visual Studio Code (Universal Editor for Beginners & Pros) ===
@@ -213,7 +214,7 @@ gpgcheck=1
 gpgkey=https://packages.microsoft.com/keys/microsoft.asc
 EOF
   sudo dnf check-update
-  sudo dnf install -y code
+  sudo dnf install -y code || log_warn "VS Code install failed"
   step_end "Visual Studio Code installed"
 else
   log_warn "Skipped Visual Studio Code installation."
@@ -221,9 +222,9 @@ fi
 
 # Windows RTC dual boot fix
 if confirm "⚡️Are you dual boot with Windows or not?"; then
-step_start "⏰ Setting Windows RTC compatibility to local time = 0"
-sudo timedatectl set-local-rtc 0 --adjust-system-clock
-step_end "Windows RTC setting updated"
+  step_start "⏰ Setting Windows RTC compatibility to local time = 0"
+  sudo timedatectl set-local-rtc 0 --adjust-system-clock || log_warn "timedatectl failed"
+  step_end "Windows RTC setting updated"
 else
   log_warn "Skipped dual boot fix."
 fi
@@ -231,7 +232,7 @@ fi
 # === Final Cleanup ===
 step_start "🧹 Cleaning package caches"
 sudo dnf clean all
-sudo flatpak uninstall --unused -y
+flatpak uninstall --unused -y
 step_end "System cleanup done"
 
 # === Final Message ===
