@@ -1,40 +1,34 @@
 #!/bin/bash
 
-# Fedora 42 Post-Install Setup Script with Advanced Logging and Interactivity
-
+# Fedora 42 Post-Install Setup Script (Fixed Version)
 set -euo pipefail
 IFS=$'\n\t'
 
-# === Setup Logging ===
 LOG_DIR="$HOME/fedora42-setup-logs"
 mkdir -p "$LOG_DIR"
 LOGFILE="$LOG_DIR/fedora42-setup-$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOGFILE") 2>&1
 
-# === Colors ===
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Colors
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; CYAN='\033[0;36m'; NC='\033[0m'
 
-# === Functions ===
 log_info() { echo -e "${GREEN}✅ [INFO]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}⚠️ [WARN]${NC} $*"; }
 log_error() { echo -e "${RED}❌ [ERROR]${NC} $*" >&2; }
 log_prompt() { echo -ne "${BLUE}❓ [INPUT]${NC} $*"; }
+
 confirm() {
   while true; do
     log_prompt "$1 [y/n]: "
     read -r ans
     case "$ans" in
-      [Yy]* ) return 0 ;;
-      [Nn]* ) return 1 ;;
-      * ) echo "Please answer y or n." ;;
+      [Yy]*) return 0 ;;
+      [Nn]*) return 1 ;;
+      *) echo "Please answer y or n." ;;
     esac
   done
 }
+
 check_internet() {
   log_info "🌐 Checking internet connectivity..."
   if ! ping -c1 -W2 8.8.8.8 &>/dev/null; then
@@ -43,11 +37,10 @@ check_internet() {
   fi
   log_info "🌐 Internet connectivity confirmed."
 }
+
 choose_option() {
-  local prompt="$1"
-  shift
-  local options=("$@")
-  local opt
+  local prompt="$1"; shift
+  local options=("$@"); local opt
   while true; do
     echo -e "${CYAN}📋 ${prompt}${NC}"
     for i in "${!options[@]}"; do
@@ -62,25 +55,25 @@ choose_option() {
     echo "❗ Invalid option. Try again."
   done
 }
+
 step_start() {
   echo -e "\n${CYAN}🔧 ==> Starting: $* ...${NC}"
   date +"[%Y-%m-%d %H:%M:%S] Starting: $*" >> "$LOGFILE"
 }
+
 step_end() {
   echo -e "${CYAN}✔️ ==> Completed: $*${NC}\n"
   date +"[%Y-%m-%d %H:%M:%S] Completed: $*" >> "$LOGFILE"
 }
 
 # === Start Script ===
-
 clear
-echo -e "${GREEN}🚀 Fedora 42 Post-Install Setup Script (with beginner-friendly GPU install)${NC}"
+echo -e "${GREEN}🚀 Fedora 42 Post-Install Setup Script (Fixed)${NC}"
 echo "📄 Log file: $LOGFILE"
 
-# Check Internet connectivity early
 check_internet
 
-# Enable RPM Fusion and Flathub repos
+# Enable RPM Fusion & Flathub
 step_start "📦 Enabling RPM Fusion & Flathub repositories"
 sudo dnf install -y \
   https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
@@ -89,24 +82,18 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 step_end "Repositories enabled"
 
 # System update
-step_start "🔄 System upgrade (including all repos)"
+step_start "🔄 System upgrade"
 sudo dnf upgrade --refresh -y
 step_end "System upgraded"
 
-# === Beginner-Friendly GPU Driver Installation ===
-
+# GPU drivers
 step_start "🖥️ GPU Drivers Installation"
-
-echo "Welcome! Please select your GPU brand to install the best drivers."
-echo "Note: Installing drivers may take some minutes as kernel modules compile."
-echo "You may run this multiple times if you have multiple GPUs (e.g., Intel + NVIDIA)."
-
 while true; do
   echo -e "\nSelect your GPU brand:"
   echo "  1) NVIDIA"
   echo "  2) AMD"
   echo "  3) Intel"
-  echo "  4) None / Skip GPU driver installation"
+  echo "  4) None / Skip"
 
   log_prompt "Enter choice [1-4]: "
   read -r gpu_choice
@@ -114,17 +101,14 @@ while true; do
   case "$gpu_choice" in
     1)
       log_info "You chose NVIDIA GPU."
-      echo "⚠️ NVIDIA driver installation may take time while kernel modules build."
       if confirm "Proceed with NVIDIA driver installation?"; then
         step_start "Installing NVIDIA drivers"
-        # NVIDIA-specific macro for RTX 4000/5000 series
         if lspci -nnk | grep -i nvidia | grep -E 'RTX 40|RTX 50|4090|5080|5090' &>/dev/null; then
           echo "%_with_kmod_nvidia_open 1" | sudo tee /etc/rpm/macros.nvidia-kmod >/dev/null
-          log_warn "Detected RTX 4000/5000 series GPU, enabling special kernel module support."
+          log_warn "Detected RTX 4000/5000 series GPU, enabling special kernel support."
         else
           sudo rm -f /etc/rpm/macros.nvidia-kmod 2>/dev/null || true
         fi
-
         sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda nvidia-vaapi-driver
         sudo akmods --force
         sudo dracut --force
@@ -138,7 +122,6 @@ while true; do
       ;;
     2)
       log_info "You chose AMD GPU."
-      echo "⚠️ AMD drivers include Mesa and multimedia acceleration, installation may take a couple of minutes."
       if confirm "Proceed with AMD driver installation?"; then
         step_start "Installing AMD drivers"
         sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
@@ -151,13 +134,12 @@ while true; do
       fi
       ;;
     3)
-      log_info "You chose Intel integrated GPU."
-      echo "⚠️ Intel drivers and multimedia acceleration may take a minute to install."
+      log_info "You chose Intel GPU."
       if confirm "Proceed with Intel driver installation?"; then
         step_start "Installing Intel drivers"
         sudo dnf install -y mesa-dri-drivers mesa-vulkan-drivers vulkan-loader mesa-libGLU
-        sudo dnf install -y intel-media-driver || true       # Newer Intel GPUs (Tiger Lake+)
-        sudo dnf install -y intel-vaapi-driver || true       # Older Intel GPUs
+        sudo dnf install -y intel-media-driver || true
+        sudo dnf install -y intel-vaapi-driver || true
         log_info "✅ Intel GPU drivers installed."
         step_end "Intel drivers installation"
       else
@@ -170,30 +152,28 @@ while true; do
       ;;
     *)
       echo "❌ Invalid option. Please enter a number between 1 and 4."
-      continue
       ;;
   esac
 
   echo ""
-  if confirm "Would you like to install drivers for another GPU (useful for hybrid setups)?"; then
+  if confirm "Install drivers for another GPU (useful for hybrid setups)?"; then
     continue
   else
     break
   fi
 done
-
 step_end "GPU Drivers Installation Completed"
 
-# === Multimedia Codecs (Universal) ===
-step_start "🎵 Installing Multimedia Codecs (audio, video, DVD, MP3, etc.)"
+# Multimedia codecs
+step_start "🎵 Installing Multimedia Codecs"
 sudo dnf swap ffmpeg-free ffmpeg --allowerasing -y
-sudo dnf install -y gstreamer1-plugins-{bad-\*,good-\*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame\* --exclude=gstreamer1-plugins-bad-free-devel
+sudo dnf install -y gstreamer1-plugins-{bad-*,good-*,base} gstreamer1-plugin-openh264 gstreamer1-libav lame* --exclude=gstreamer1-plugins-bad-free-devel
 sudo dnf group install -y sound-and-video
 sudo dnf update -y @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
-log_info "✅ Multimedia codecs installed — enjoy smooth playback."
+log_info "✅ Multimedia codecs installed."
 step_end "Codecs installed"
 
-# Set hostname
+# Hostname
 step_start "🏷️ Setting hostname to 'fedora'"
 sudo hostnamectl set-hostname fedora
 step_end "Hostname set"
@@ -212,102 +192,107 @@ else
 fi
 
 # Fonts - FiraCode Nerd Font
-if confirm "🔤 Install FiraCode Nerd Font (programming-friendly font)?"; then
+if confirm "🔤 Install FiraCode Nerd Font?"; then
   step_start "📚 Installing FiraCode Nerd Font"
   sudo dnf install -y unzip
-  mkdir -p ~/.local/share/fonts
-  curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
-  unzip -o ~/.local/share/fonts/FiraCode.zip -d ~/.local/share/fonts/FiraCode
+  mkdir -p "$HOME/.local/share/fonts"
+  curl -Lf -o "$HOME/.local/share/fonts/FiraCode.zip" https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
+  unzip -o "$HOME/.local/share/fonts/FiraCode.zip" -d "$HOME/.local/share/fonts/FiraCode"
   fc-cache -fv
   step_end "FiraCode Nerd Font installed"
 else
   log_warn "Skipped FiraCode Nerd Font installation"
 fi
 
-# === Zsh with Oh My Zsh and Oh My Posh prompt ===
-if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Posh prompt?"; then
-  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
+# Zsh with Oh My Zsh and Oh My Posh
+if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?"; then
+  step_start "⚙️ Installing Zsh, Oh My Zsh, and Oh My Posh"
 
-  # Install Zsh and dependencies (Fedora uses dnf, not apt)
   sudo dnf install -y zsh curl unzip wget
 
   # Install Oh My Zsh (unattended)
-  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+  if [ ! -d "$HOME/.oh-my-zsh" ]; then
     sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   else
     log_info "Oh My Zsh already installed"
   fi
 
-  # Set zsh as default shell if not already
+  # Change default shell to Zsh (Fedora requires sudo):contentReference[oaicite:8]{index=8}
   current_shell=$(getent passwd "$USER" | cut -d: -f7)
   zsh_path=$(command -v zsh)
   if [[ "$current_shell" != "$zsh_path" ]]; then
-    chsh -s "$zsh_path"
+    sudo chsh -s "$zsh_path" "$USER"
     log_info "Default shell changed to Zsh"
   else
     log_info "Zsh already default shell"
   fi
 
-  # Backup existing .zshrc first
+  # Backup existing .zshrc
   cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
 
-  # Create a minimal .zshrc with embedded plugin list and Oh My Zsh basics,
-  # plus Oh My Posh configuration to replace prompt
+  # Install Zsh plugins (autosuggestions, syntax-highlighting, etc.):contentReference[oaicite:9]{index=9}:contentReference[oaicite:10]{index=10}
+  ZSH_CUSTOM=${ZSH:-$HOME/.oh-my-zsh}/custom
+  mkdir -p "$ZSH_CUSTOM/plugins"
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+  fi
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+  fi
+  if [ ! -d "$ZSH_CUSTOM/plugins/fast-syntax-highlighting" ]; then
+    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git "$ZSH_CUSTOM/plugins/fast-syntax-highlighting"
+  fi
+  if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autocomplete" ]; then
+    git clone https://github.com/marlonrichert/zsh-autocomplete.git "$ZSH_CUSTOM/plugins/zsh-autocomplete"
+  fi
 
+  # Write new .zshrc
   cat > ~/.zshrc <<'EOF'
 # Path to Oh My Zsh installation
 export ZSH="$HOME/.oh-my-zsh"
-
-# Load Oh My Zsh framework
-ZSH_THEME=""  # Theme disabled, using Oh My Posh instead
-
-# Plugins as per gist from https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df
+# Disable Oh My Zsh's default theme (we use Oh My Posh instead)
+ZSH_THEME=""
+# Plugins (as per user configuration)
 plugins=(
-    git 
-    zsh-autosuggestions 
-    zsh-syntax-highlighting 
-    fast-syntax-highlighting 
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    fast-syntax-highlighting
     zsh-autocomplete
 )
-
 source $ZSH/oh-my-zsh.sh
 
-# Load Oh My Posh prompt
-eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
+# Oh My Posh prompt (atomic theme):contentReference[oaicite:11]{index=11}
+export PATH="$HOME/.local/bin:$PATH"
+eval "$(oh-my-posh init zsh --config \"$HOME/.poshthemes/atomic.omp.json\")"
 
+# Disable Oh My Zsh auto-update prompt
+DISABLE_AUTO_UPDATE="true"
 EOF
 
-  log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
+  log_info ".zshrc updated with plugins and Oh My Posh configuration"
 
-  # Install Oh My Posh binary (latest Linux AMD64 stable release)
-
+  # Install Oh My Posh binary (latest Linux amd64):contentReference[oaicite:12]{index=12}
   OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
   mkdir -p "$(dirname "$OMP_BIN_PATH")"
-
-  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
+  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest \
+    | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
   wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
   chmod +x "$OMP_BIN_PATH"
   log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
 
-  # Download 'atomic' Oh My Posh theme JSON 
+  # Download 'atomic' Oh My Posh theme JSON (using one-line URL):contentReference[oaicite:13]{index=13}
   mkdir -p ~/.poshthemes
   if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
     wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
     log_info "'atomic' Oh My Posh theme downloaded"
   else
-    log_info "'atomic' Oh My Posh theme already exists"
+    log_info "'atomic' theme already exists"
   fi
 
-  # Ensure ~/.local/bin is in PATH for future sessions
-  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
-    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
-    log_info "Added ~/.local/bin to PATH in .zshrc"
-  fi
-
-  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
-
+  step_end "Zsh, Oh My Zsh, and Oh My Posh installed"
 else
-  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
+  log_warn "Skipped Zsh, Oh My Zsh, and Oh My Posh setup"
 fi
 
 # === Ghostty terminal configuration ===
@@ -382,10 +367,10 @@ done
 
 step_end "Fedora Customization installation completed."
 
-# Faster boot optimization option
+# Disable NetworkManager-wait-online for faster boot
 if confirm "⚡ Disable NetworkManager-wait-online.service for faster boot?"; then
   step_start "Disabling NetworkManager-wait-online.service"
-  sudo systemctl disable NetworkManager-wait-online.service || log_warn "Disable NetworkManager-wait-online failed"
+  sudo systemctl disable NetworkManager-wait-online.service || log_warn "Disable NetworkManager-wait-online.service failed"
   step_end "Disabled NetworkManager-wait-online.service"
 else
   log_warn "Skipped disabling NetworkManager-wait-online.service"
