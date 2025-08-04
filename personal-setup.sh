@@ -204,6 +204,17 @@ else
   log_warn "Skipped FiraCode Nerd Font installation"
 fi
 
+# Developer Tools
+if confirm "🖥️ Install development tools and languages (gcc, clang, Java JDK, git, python, node, podman, docker)?"; then
+  step_start "📦 Installing development tools and languages"
+  sudo dnf group install -y development-tools c-development
+  sudo dnf install -y gcc clang cmake git-all python3-pip java-21-openjdk-devel nodejs podman docker || log_warn "Some dev tools failed to install"
+  sudo systemctl enable --now docker || log_warn "Docker service enable failed"
+  step_end "Development tools installed"
+else
+  log_warn "Skipped developer tools installation"
+fi
+
 # Zsh with Oh My Zsh and Oh My Posh
 if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?"; then
   step_start "⚙️ Installing Zsh, Oh My Zsh, and Oh My Posh"
@@ -311,17 +322,6 @@ EOF
 
 log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
 step_end "Ghostty terminal configured"
-
-# Developer Tools
-if confirm "🖥️ Install development tools and languages (gcc, clang, Java JDK, git, python, node, podman, docker)?"; then
-  step_start "📦 Installing development tools and languages"
-  sudo dnf group install -y development-tools c-development
-  sudo dnf install -y gcc clang cmake git-all python3-pip java-21-openjdk-devel nodejs podman docker || log_warn "Some dev tools failed to install"
-  sudo systemctl enable --now docker || log_warn "Docker service enable failed"
-  step_end "Development tools installed"
-else
-  log_warn "Skipped developer tools installation"
-fi
 
 # Desktop Customization snippet:
 step_start "🎨 Customize Fedora"
