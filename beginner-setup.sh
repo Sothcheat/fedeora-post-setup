@@ -153,6 +153,16 @@ else
   log_warn "Skipped FiraCode Nerd Font install."
 fi
 
+# === Minimal Dev Tools (Beginner-Friendly) ===
+if confirm "🖥️ Install basic developer tools (gcc, clang, git, python, cmake)?"; then
+  step_start "📦 Installing basic development tools"
+  sudo dnf group install -y development-tools c-development
+  sudo dnf install -y gcc clang cmake git-all python3-pip
+  step_end "Development tools installed"
+else
+  log_warn "Skipped development tools install."
+fi
+
 # === Minimal Zsh Setup ===
 if confirm "Install Zsh shell with Oh My Zsh basic setup?"; then
   step_start "Installing Zsh and Oh My Zsh"
@@ -189,16 +199,6 @@ EOF
   step_end "Zsh and Oh My Zsh installed"
 else
   log_warn "Skipped Zsh and Oh My Zsh setup"
-fi
-
-# === Minimal Dev Tools (Beginner-Friendly) ===
-if confirm "🖥️ Install basic developer tools (gcc, clang, git, python, cmake)?"; then
-  step_start "📦 Installing basic development tools"
-  sudo dnf group install -y development-tools c-development
-  sudo dnf install -y gcc clang cmake git-all python3-pip
-  step_end "Development tools installed"
-else
-  log_warn "Skipped development tools install."
 fi
 
 # === Faster Boot (Network Wait Disable) ===
