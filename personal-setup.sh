@@ -123,7 +123,7 @@ while true; do
       if confirm "Proceed with NVIDIA driver installation?"; then
         step_start "Installing NVIDIA drivers"
         # Check for newer GPU series that need open kernel modules
-        if lspci -nnk | grep -i nvidia | grep -E 'RTX 40|RTX 50|4090|5080|5090' &>/dev/null; then
+        if lspci -nnk | grep -i nvidia | grep -E 'RTX (4[0-9]|5[0-9])[0-9][0-9]' &>/dev/null; then
           echo "%_with_kmod_nvidia_open 1" | sudo tee /etc/rpm/macros.nvidia-kmod >/dev/null
           log_warn "Detected RTX 4000/5000 series GPU, enabling open kernel modules."
         else
