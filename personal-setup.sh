@@ -517,9 +517,6 @@ window-decoration = true
 # Terminal behavior
 scrollback-limit = 10000
 mouse-hide-while-typing = true
-
-# Performance
-vsync = true
 EOF
 
   log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
