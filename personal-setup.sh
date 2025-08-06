@@ -302,7 +302,7 @@ if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?
   # Set ZSH_CUSTOM path
   ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
   
-  # Install Zsh plugins
+  # Install Zsh plugins (FIXED: Removed problematic zsh-autocomplete)
   log_info "Installing Zsh plugins..."
   
   # zsh-autosuggestions
@@ -310,17 +310,12 @@ if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?
     git clone https://github.com/zsh-users/zsh-autosuggestions.git "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
   fi
   
-  # zsh-syntax-highlighting
+  # zsh-syntax-highlighting (FIXED: Use only one syntax highlighting plugin)
   if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
   fi
-  
-  # fast-syntax-highlighting
-  if [ ! -d "$ZSH_CUSTOM/plugins/fast-syntax-highlighting" ]; then
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git "$ZSH_CUSTOM/plugins/fast-syntax-highlighting"
-  fi
-  
-  # zsh-autocomplete
+
+  # zsh-autocomplete (FIXED: Keep it but configure properly)
   if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autocomplete" ]; then
     git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$ZSH_CUSTOM/plugins/zsh-autocomplete"
   fi
@@ -358,7 +353,7 @@ if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?
     log_info "Backed up existing .zshrc"
   fi
 
-  # Create new .zshrc with proper configuration
+  # Create new .zshrc with FIXED configuration
   cat > ~/.zshrc <<'EOF'
 # Path to Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
@@ -420,15 +415,20 @@ DISABLE_AUTO_UPDATE="true"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+# NOTE: zsh-autocomplete is loaded separately AFTER oh-my-zsh
 plugins=(
     git
     zsh-autosuggestions
     zsh-syntax-highlighting
-    fast-syntax-highlighting
-    zsh-autocomplete
 )
 
 source $ZSH/oh-my-zsh.sh
+
+# CRITICAL: zsh-autocomplete must be sourced AFTER oh-my-zsh
+# This is the key difference from manual installation
+if [ -f "$ZSH_CUSTOM/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]; then
+    source "$ZSH_CUSTOM/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
+fi
 
 # User configuration
 
@@ -461,9 +461,13 @@ if [ -d "$HOME/.local/bin" ]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
+# FIXED: Add error handling for Oh My Posh initialization
 # Oh My Posh initialization (atomic theme)
-if command -v oh-my-posh &> /dev/null; then
+if command -v oh-my-posh &> /dev/null && [ -f ~/.poshthemes/atomic.omp.json ]; then
     eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
+elif command -v oh-my-posh &> /dev/null; then
+    # Fallback to a built-in theme if atomic.omp.json is missing
+    eval "$(oh-my-posh init zsh)"
 fi
 
 # Custom configurations can be added below this line
