@@ -517,6 +517,12 @@ window-decoration = true
 # Terminal behavior
 scrollback-limit = 10000
 mouse-hide-while-typing = true
+
+# Performance
+unfocused-split-opacity = 0.7
+link-url = true
+copy-on-select = false
+confirm-close-surface = false
 EOF
 
   log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
