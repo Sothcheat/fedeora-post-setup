@@ -16,25 +16,25 @@ Run the scripts directly from the internet with one simple command.
 ### Beginner-Friendly Setup
 
 ```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/beginner-setup.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedora-post-setup/main/beginner-setup.sh)"
 ```
 
 or using `wget`:
 
 ```
-/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/beginner-setup.sh)"
+/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedora-post-setup/main/beginner-setup.sh)"
 ```
 
 ### Personal Development Setup
 
 ```
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/personal-setup.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sothcheat/fedora-post-setup/main/personal-setup.sh)"
 ```
 
 or using `wget`:
 
 ```
-/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedeora-post-setup/main/personal-setup.sh)"
+/bin/bash -c "$(wget -qO- https://raw.githubusercontent.com/Sothcheat/fedora-post-setup/main/personal-setup.sh)"
 ```
 
 ---
