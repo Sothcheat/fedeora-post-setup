@@ -126,7 +126,7 @@ while true; do
         step_start "Installing NVIDIA drivers"
         
         # Check for newer GPU series that need open kernel modules
-        if lspci -nnk | grep -i nvidia | grep -E 'RTX 40|RTX 50|4090|5080|5090' &>/dev/null; then
+        if lspci -nnk | grep -i nvidia | grep -E 'RTX (4[0-9]|5[0-9])[0-9][0-9]' &>/dev/null; then
           echo "%_with_kmod_nvidia_open 1" | sudo tee /etc/rpm/macros.nvidia-kmod >/dev/null
           log_info "Detected RTX 4000/5000 series - enabling open kernel modules"
         else
@@ -247,7 +247,7 @@ if confirm "🔤 Install better fonts for improved readability and development? 
   
   # Install Microsoft core fonts for better web compatibility
   sudo dnf install -y curl cabextract xorg-x11-font-utils fontconfig
-  sudo rpm -i --quiet https://downloads.sourceforge.net/project/mscorefonts2/rpms/msttcore-fonts-installer-2.6-1.noarch.rpm || log_warn "Microsoft fonts install failed"
+  sudo dnf install -y msttcore-fonts-installer || log_warn "Microsoft fonts install failed"
   
   # Rebuild font cache
   fc-cache -fv &>/dev/null
